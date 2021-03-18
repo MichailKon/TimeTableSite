@@ -13,8 +13,8 @@
             {% else %}
                 <div class="form-group">
                     {{ field.label }}<br>
-
-                    {% set was_selected = [] %}
+                    {{ field() }}
+                    {#{% set was_selected = [] %}
                     <select class="form-control">
                         {% for subj in subjects %}
                             {% if subj == field.data %}
@@ -30,7 +30,7 @@
                         {% else %}
                             <option value=""></option>
                         {% endif %}
-                    </select>
+                    </select>#}
                     {% for error in field.errors %}
                         <div class="error">{{ error }}</div>
                     {% endfor %}

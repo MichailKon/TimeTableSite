@@ -91,20 +91,40 @@ def edit_subjects(day_num):
         abort(404)
     day_name = day_name.day_name
     subj = [i.subject_name for i in db_sess.query(Subject).all()]
+    for subj_num in range(1, 8):
+        exec(f'form.subject_{subj_num}.choices = {subj}')
 
     if request.method == "GET":
         query = db_sess.query(Schedule, Subject)
         query = query.join(Subject, Subject.subject_id == Schedule.schedule_subject)
         schedule = query.all()
-        if not schedule:
-            abort(404)
-        else:
-            for i in schedule:
-                exec(f'form.subject_{i.Schedule.schedule_num}.data = "{i.Subject.subject_name}"')
+        for i in schedule:
+            exec(f'form.subject_{i.Schedule.schedule_num}.default = "{i.Subject.subject_name}"')
+        form.process()
         return render_template('subject_edit.html', title='Edit schedule',
                                day_name=day_name, form=form, subjects=subj)
     if form.validate_on_submit():
-        # TODO add check
+        for subj_num in range(1, 8):
+            subj = db_sess.query(Schedule).filter(Schedule.schedule_day == day_num,
+                                                  Schedule.schedule_num == subj_num)
+            subj = subj.first()
+            subj: Schedule
+
+            form_subj = eval(f'form.subject_{subj_num}.data')
+
+            if subj and form_subj:
+                subj.schedule_subject = db_sess.query(Subject). \
+                    filter(Subject.subject_name == form_subj).first().subject_id
+            elif subj and not form_subj:
+                db_sess.delete(subj)
+            elif subj is None and form_subj:
+                new_subject = db_sess.query(Subject).filter(Subject.subject_name == form_subj).first()
+                new_subject: Subject
+                subject = Schedule(schedule_subject=new_subject.subject_id,
+                                   schedule_day=day_num,
+                                   schedule_num=subj_num)
+                db_sess.add(subject)
+        db_sess.commit()
         return redirect('/schedule')
     return render_template('subject_edit.html', title='Edit schedule',
                            day_name=day_name, form=form, subjects=subj)
