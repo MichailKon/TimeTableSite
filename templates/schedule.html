@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Schedule</h1>
+    {% for day in days %}
+        <h2>{{ day.day_name }}</h2>
+        <table class="table table-bordered table-striped">
+            <tr>
+                <th>Номер предмета</th>
+                <th>Название предмета</th>
+            </tr>
+            {% for subject in range(1, 8) %}
+                <tr>
+                    <th>{{ loop.index }}</th>
+                    <td>{{ schedule.get(day.day_id, {}).get(subject, '') }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endfor %}
+
+{% endblock %}
