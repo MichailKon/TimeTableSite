@@ -10,7 +10,7 @@ from data.schedules import Schedule
 from data.subjects import Subject
 from data.homework import Homework
 
-from forms import user_forms
+from forms import user_forms, schedule_forms
 
 app = Flask(__name__)
 api = Api(app)
@@ -49,11 +49,11 @@ def reqister():
         if form.password.data != form.password_again.data:
             return render_template('register.html', title='Sign up',
                                    form=form,
-                                   message="Passwords don't match")
+                                   message="Пароли не совпадают")
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.email == form.email.data).first():
             return render_template('register.html', title='Sign in',
-                                   form=form, message='This person already exists')
+                                   form=form, message='Человек с таким логином уже существует')
         user = User(surname=form.surname.data, name=form.name.data,
                     age=form.age.data, email=form.email.data)
         user.set_password(form.password.data)
@@ -81,7 +81,37 @@ def schedule():
                            schedule=schedule, days=days)
 
 
+@app.route('/schedule/<int:day_num>', methods=['GET', 'POST'])
+# @login_required
+def edit_subjects(day_num):
+    form = schedule_forms.EditSubjects()
+    db_sess = db_session.create_session()
+    day_name = db_sess.query(Day).filter(Day.day_id == day_num).first()
+    if not day_name:
+        abort(404)
+    day_name = day_name.day_name
+    subj = [i.subject_name for i in db_sess.query(Subject).all()]
+
+    if request.method == "GET":
+        query = db_sess.query(Schedule, Subject)
+        query = query.join(Subject, Subject.subject_id == Schedule.schedule_subject)
+        schedule = query.all()
+        if not schedule:
+            abort(404)
+        else:
+            for i in schedule:
+                exec(f'form.subject_{i.Schedule.schedule_num}.data = "{i.Subject.subject_name}"')
+        return render_template('subject_edit.html', title='Edit schedule',
+                               day_name=day_name, form=form, subjects=subj)
+    if form.validate_on_submit():
+        # TODO add check
+        return redirect('/schedule')
+    return render_template('subject_edit.html', title='Edit schedule',
+                           day_name=day_name, form=form, subjects=subj)
+
+
 if __name__ == 'app':
+    app.jinja_env.add_extension('jinja2.ext.do')
     login_manager.init_app(app)
     db_session.global_init("db/homework.db")
     app.run()

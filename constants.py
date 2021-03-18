@@ -1,0 +1,1 @@
+MAX_SUBJECTS = 7
