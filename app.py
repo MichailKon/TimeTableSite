@@ -83,7 +83,7 @@ def schedule():
 
 
 @app.route('/schedule/<int:day_num>', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def edit_subjects(day_num):
     form = schedule_forms.EditSubjects()
     db_sess = db_session.create_session()

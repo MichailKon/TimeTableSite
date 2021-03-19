@@ -2,22 +2,27 @@
 
 {% block content %}
     <h1>Расписание</h1>
-    {% for day in days %}
-        <h2>{{ day.day_name }}</h2>
-        <table class="table table-bordered table-striped">
-            <tr>
-                <th>Номер предмета</th>
-                <th>Название предмета</th>
-            </tr>
-            {% for subject in range(1, max_subjects + 1) %}
-                <tr>
-                    <th>{{ loop.index }}</th>
-                    <td>{{ schedule.get(day.day_id, {}).get(subject, '') }}</td>
-                </tr>
-            {% endfor %}
-        </table>
-        {% if current_user.is_authenticated and current_user.have_admin_rights %}
-            <a href="/schedule/{{ day.day_id }}" class="btn btn-warning">Изменить</a>
-        {% endif %}
-    {% endfor %}
+    <div class="schedule">
+        {% for day in days %}
+            <div class="schedule-day">
+                <h2>{{ day.day_name }}</h2>
+                <table class="table table-bordered table-striped table-schedule">
+                    <tr>
+                        <th>Номер предмета</th>
+                        <th>Название предмета</th>
+                    </tr>
+                    {% for subject in range(1, max_subjects + 1) %}
+                        <tr>
+                            <th>{{ loop.index }}</th>
+                            <td>{{ schedule.get(day.day_id, {}).get(subject, '') }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                {% if current_user.is_authenticated and current_user.have_admin_rights %}
+                    <a href="/schedule/{{ day.day_id }}" class="btn btn-warning">Изменить</a>
+                {% endif %}
+                <br>
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}
