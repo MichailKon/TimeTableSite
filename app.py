@@ -1,7 +1,6 @@
 from flask import Flask, render_template, redirect, request, abort
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from flask_restful import Api, abort
-from sqlalchemy import func
 
 from data import db_session
 from data.users import User
@@ -11,6 +10,8 @@ from data.subjects import Subject
 from data.homework import Homework
 
 from forms import user_forms, schedule_forms
+
+from constants import MAX_SUBJECTS
 
 app = Flask(__name__)
 api = Api(app)
@@ -78,7 +79,7 @@ def schedule():
         schedule[i.Day.day_id] = now
     days = db_sess.query(Day)
     return render_template('schedule.html', title='Schedule',
-                           schedule=schedule, days=days)
+                           schedule=schedule, days=days, max_subjects=MAX_SUBJECTS)
 
 
 @app.route('/schedule/<int:day_num>', methods=['GET', 'POST'])
@@ -91,7 +92,7 @@ def edit_subjects(day_num):
         abort(404)
     day_name = day_name.day_name
     subj = [i.subject_name for i in db_sess.query(Subject).all()]
-    for subj_num in range(1, 8):
+    for subj_num in range(1, MAX_SUBJECTS + 1):
         exec(f'form.subject_{subj_num}.choices = {subj}')
 
     if request.method == "GET":
@@ -104,11 +105,10 @@ def edit_subjects(day_num):
         return render_template('subject_edit.html', title='Edit schedule',
                                day_name=day_name, form=form, subjects=subj)
     if form.validate_on_submit():
-        for subj_num in range(1, 8):
+        for subj_num in range(1, MAX_SUBJECTS + 1):
             subj = db_sess.query(Schedule).filter(Schedule.schedule_day == day_num,
                                                   Schedule.schedule_num == subj_num)
             subj = subj.first()
-            subj: Schedule
 
             form_subj = eval(f'form.subject_{subj_num}.data')
 

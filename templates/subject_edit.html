@@ -13,24 +13,7 @@
             {% else %}
                 <div class="form-group">
                     {{ field.label }}<br>
-                    {{ field() }}
-                    {#{% set was_selected = [] %}
-                    <select class="form-control">
-                        {% for subj in subjects %}
-                            {% if subj == field.data %}
-                                {% do was_selected.append(1) %}
-                                <option selected class="{{ was_selected }}">{{ subj }}</option>
-                            {% else %}
-                                <option class="{{ was_selected }}">{{ subj }}</option>
-                            {% endif %}
-                        {% endfor %}
-
-                        {% if not was_selected %}
-                            <option value="" selected="selected"></option>
-                        {% else %}
-                            <option value=""></option>
-                        {% endif %}
-                    </select>#}
+                    {{ field(class="form-control") }}
                     {% for error in field.errors %}
                         <div class="error">{{ error }}</div>
                     {% endfor %}
