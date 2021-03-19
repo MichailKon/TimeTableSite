@@ -64,6 +64,12 @@ def reqister():
     return render_template('register.html', title='Sign up', form=form)
 
 
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect('/schedule')
+
+
 @app.route('/schedule')
 def schedule():
     db_sess = db_session.create_session()
@@ -91,13 +97,14 @@ def edit_subjects(day_num):
     if not day_name:
         abort(404)
     day_name = day_name.day_name
-    subj = [i.subject_name for i in db_sess.query(Subject).all()]
+    subj = [i.subject_name for i in db_sess.query(Subject).order_by(Subject.subject_name).all()]
     for subj_num in range(1, MAX_SUBJECTS + 1):
         exec(f'form.subject_{subj_num}.choices = {subj}')
 
     if request.method == "GET":
         query = db_sess.query(Schedule, Subject)
         query = query.join(Subject, Subject.subject_id == Schedule.schedule_subject)
+        query = query.filter(Schedule.schedule_day == day_num)
         schedule = query.all()
         for i in schedule:
             exec(f'form.subject_{i.Schedule.schedule_num}.default = "{i.Subject.subject_name}"')
@@ -105,6 +112,8 @@ def edit_subjects(day_num):
         return render_template('subject_edit.html', title='Edit schedule',
                                day_name=day_name, form=form, subjects=subj)
     if form.validate_on_submit():
+        if form.cancel.data:
+            return redirect('/schedule')
         for subj_num in range(1, MAX_SUBJECTS + 1):
             subj = db_sess.query(Schedule).filter(Schedule.schedule_day == day_num,
                                                   Schedule.schedule_num == subj_num)

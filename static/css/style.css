@@ -1,3 +1,7 @@
+p {
+   font-family: 'Roboto', 'Helvetica Nue', sans-serif;
+}
+
 h4 {
     color: lightgray;
 }
@@ -13,5 +17,21 @@ h4 {
 .schedule-day {
     display: inline-block;
     flex: 1 0 30%;
-    margin: 10px;
+    margin: 20px;
+}
+
+.schedule-buttons {
+    display: flex;
+}
+
+.schedule-buttons > p {
+    margin: 0 7px;
+}
+
+thead {
+    text-align: center;
+}
+
+tbody > tr > td {
+    text-align: center;
 }

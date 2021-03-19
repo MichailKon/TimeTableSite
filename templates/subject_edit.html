@@ -7,22 +7,21 @@
             {{ form.csrf_token }}
         </div>
 
-        {% for field in form if field.name != 'csrf_token' %}
-            {% if field.name == 'submit' %}
-
-            {% else %}
-                <div class="form-group">
-                    {{ field.label }}<br>
-                    {{ field(class="form-control") }}
-                    {% for error in field.errors %}
-                        <div class="error">{{ error }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+        {% for field in form if field.name not in ["csrf_token", "submit", "cancel"] %}
+            <div class="form-group">
+                {{ field.label }}<br>
+                {{ field(class="form-control") }}
+                {% for error in field.errors %}
+                    <div class="error">{{ error }}</div>
+                {% endfor %}
+            </div>
         {% endfor %}
 
         <br>
-        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        <div class="schedule-buttons">
+            <p>{{ form.cancel(type="submit", class="btn btn-secondary") }}</p>
+            <p>{{ form.submit(type="submit", class="btn btn-success") }}</p>
+        </div>
     </form>
 
 {% endblock %}

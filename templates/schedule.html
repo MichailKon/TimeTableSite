@@ -7,16 +7,21 @@
             <div class="schedule-day">
                 <h2>{{ day.day_name }}</h2>
                 <table class="table table-bordered table-striped table-schedule">
+                    <thead>
                     <tr>
-                        <th>Номер предмета</th>
-                        <th>Название предмета</th>
+                        <th scope="col">Номер предмета</th>
+                        <th scope="col">Название предмета</th>
                     </tr>
+                    </thead>
+
+                    <tbody>
                     {% for subject in range(1, max_subjects + 1) %}
                         <tr>
-                            <th>{{ loop.index }}</th>
-                            <td>{{ schedule.get(day.day_id, {}).get(subject, '') }}</td>
+                            <th scope="col">{{ loop.index }}</th>
+                            <td scope="col">{{ schedule.get(day.day_id, {}).get(subject, '') }}</td>
                         </tr>
                     {% endfor %}
+                    </tbody>
                 </table>
                 {% if current_user.is_authenticated and current_user.have_admin_rights %}
                     <a href="/schedule/{{ day.day_id }}" class="btn btn-warning">Изменить</a>
