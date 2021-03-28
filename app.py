@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, request, abort
-from flask_login import LoginManager, current_user, login_user, login_required, logout_user
+from flask_login import LoginManager, login_user, login_required, logout_user
 from flask_restful import Api, abort
 
 from data import db_session
@@ -70,20 +70,27 @@ def logout():
     return redirect('/schedule')
 
 
-@app.route('/schedule')
-def schedule():
+def get_schedule():
     db_sess = db_session.create_session()
-    schedule = {}
     query = db_sess.query(Schedule, Day, Subject)
     query = query.join(Day, Day.day_id == Schedule.schedule_day)
     query = query.join(Subject, Subject.subject_id == Schedule.schedule_subject)
 
-    for i in query.all():
+    return query.all()
+
+
+@app.route('/schedule')
+def show_schedule():
+    schedule = {}
+
+    for i in get_schedule():
         now = schedule.get(i.Day.day_id, {})
         schedule[i.Day.day_id] = now
         now[i.Schedule.schedule_num] = i.Subject.subject_name
         schedule[i.Day.day_id] = now
-    days = db_sess.query(Day)
+
+    db_sess = db_session.create_session()
+    days = db_sess.query(Day).all()
     return render_template('schedule.html', title='Schedule',
                            schedule=schedule, days=days, max_subjects=MAX_SUBJECTS)
 
@@ -137,6 +144,41 @@ def edit_subjects(day_num):
         return redirect('/schedule')
     return render_template('subject_edit.html', title='Edit schedule',
                            day_name=day_name, form=form, subjects=subj)
+
+
+# @app.route('/homework')
+# def choose_homework():
+#     pass
+
+
+@app.route('/homework/<int:year>/<int:week>')
+def show_homework(year, week):
+    # TODO add homework_start/end
+    db_sess = db_session.create_session()
+    homework = {}
+    # pick schedule
+    for i in get_schedule():
+        now = homework.get(i.Day.day_id, {})
+        now[i.Schedule.schedule_num] = now.get(i.Schedule.schedule_num, {})
+        now[i.Schedule.schedule_num]['subject_title'] = i.Subject.subject_name
+        homework[i.Day.day_id] = now
+
+    # pick homework
+    query = db_sess.query(Homework, Schedule, Day, Subject)
+    query = query.join(Schedule, Schedule.schedule_id == Homework.homework_schedule)
+    query = query.join(Day, Day.day_id == Schedule.schedule_day)
+    query = query.join(Subject, Subject.subject_id == Schedule.schedule_subject)
+    query = query.filter(Homework.homework_week == week, Homework.homework_year == year)
+
+    for i in query.all():
+        now = homework.get(i.Day.day_id, {})
+        now[i.Schedule.schedule_num] = now.get(i.Schedule.schedule_num, {})
+        now[i.Schedule.schedule_num]['subject_title'] = i.Subject.subject_name
+        now[i.Schedule.schedule_num]['subject_homework'] = i.Homework.homework_text
+        homework[i.Day.day_id] = now
+    days = db_sess.query(Day).all()
+
+    return render_template('homework.html', title='Homework', days=days, homework=homework, max_subjects=MAX_SUBJECTS)
 
 
 if __name__ == 'app':

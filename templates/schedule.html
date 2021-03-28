@@ -4,7 +4,7 @@
     <h1>Расписание</h1>
     <div class="schedule">
         {% for day in days %}
-            <div class="schedule-day">
+            <div class="schedule day">
                 <h2>{{ day.day_name }}</h2>
                 <table class="table table-bordered table-striped table-schedule">
                     <thead>
@@ -23,9 +23,9 @@
                     {% endfor %}
                     </tbody>
                 </table>
-                {% if current_user.is_authenticated and current_user.have_admin_rights %}
-                    <a href="/schedule/{{ day.day_id }}" class="btn btn-warning">Изменить</a>
-                {% endif %}
+{#                                {% if current_user.is_authenticated and current_user.have_admin_rights %}#}
+{#                                    <a href="/schedule/{{ day.day_id }}" class="btn btn-warning">Изменить</a>#}
+{#                                {% endif %}#}
                 <br>
             </div>
         {% endfor %}

@@ -14,7 +14,7 @@ h4 {
     align-items: center;
 }
 
-.schedule-day {
+.day {
     display: inline-block;
     flex: 1 0 30%;
     margin: 20px;
