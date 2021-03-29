@@ -1,22 +1,27 @@
+import datetime
+
 from flask import Flask, render_template, redirect, request, abort
 from flask_login import LoginManager, login_user, login_required, logout_user
 from flask_restful import Api, abort
 
+from constants import MAX_SUBJECTS
 from data import db_session
-from data.users import User
 from data.days import Day
+from data.homework import Homework
 from data.schedules import Schedule
 from data.subjects import Subject
-from data.homework import Homework
-
+from data.users import User
 from forms import user_forms, schedule_forms, homework_forms
-
-from constants import MAX_SUBJECTS
 
 app = Flask(__name__)
 api = Api(app)
 login_manager = LoginManager()
 app.config['SECRET_KEY'] = '267iokdonibf890wi4k23ioruh8fuipokaldfsa'
+
+
+def get_start_and_end_date_from_calendar_week(year, calendar_week):
+    monday = datetime.datetime.strptime(f'1.{calendar_week}.{year}', "%w.%W.%Y").date()
+    return monday.strftime("%d.%m.%Y"), (monday + datetime.timedelta(days=6.9)).strftime("%d.%m.%Y")
 
 
 @login_manager.user_loader
@@ -70,13 +75,15 @@ def logout():
     return redirect('/schedule')
 
 
-def get_schedule(day=None):
+def get_schedule(day=None, subj_num=None):
     db_sess = db_session.create_session()
     query = db_sess.query(Schedule, Day, Subject)
     query = query.join(Day, Day.day_id == Schedule.schedule_day)
     query = query.join(Subject, Subject.subject_id == Schedule.schedule_subject)
     if day is not None:
         query = query.filter(Schedule.schedule_day == day)
+    if subj_num is not None:
+        query = query.filter(Schedule.schedule_num == subj_num)
 
     return query.all()
 
@@ -182,9 +189,12 @@ def show_homework(year, week):
         homework[i.Day.day_id] = now
     days = db_sess.query(Day).all()
 
+    first, last = get_start_and_end_date_from_calendar_week(year, week)
+
     return render_template('homework.html', title='Homework', days=days,
                            homework=homework, max_subjects=MAX_SUBJECTS,
-                           year=year, week=week)
+                           year=year, week=week,
+                           homework_start=first, homework_end=last)
 
 
 @app.route('/homework/<int:year>/<int:week>/<int:day_num>', methods=['GET', 'POST'])
@@ -197,9 +207,9 @@ def edit_homework(year, week, day_num):
         abort(404)
     day_name = day_name.day_name
 
-    schedule = get_schedule(day_num)
-
     if request.method == "GET":
+        schedule = get_schedule(day_num)
+
         query = db_sess.query(Homework, Schedule, Subject)
         query = query.join(Schedule, Schedule.schedule_id == Homework.homework_schedule)
         query = query.join(Subject, Subject.subject_id == Schedule.schedule_subject)
@@ -219,6 +229,8 @@ def edit_homework(year, week, day_num):
         if form.cancel.data:
             return redirect('/homework')
         for subj_num in range(1, MAX_SUBJECTS + 1):
+            schedule = get_schedule(day=day_num, subj_num=subj_num)[0]
+
             query = db_sess.query(Homework, Schedule)
             query = query.join(Schedule, Schedule.schedule_id == Homework.homework_schedule)
             query = query.filter(Schedule.schedule_day == day_num,
@@ -235,7 +247,10 @@ def edit_homework(year, week, day_num):
             elif hmw and not form_hmw:
                 hmw.Homework.homework_text = ''
             elif hmw is None and form_hmw:
-                hmw.Homework.homework_text = form_hmw
+                new_hmw = Homework(homework_text=form_hmw, homework_schedule=schedule.Schedule.schedule_id,
+                                   homework_year=year, homework_week=week)
+                db_sess.add(new_hmw)
+                # hmw.Homework.homework_text = form_hmw
         db_sess.commit()
         return redirect(f'/homework/{year}/{week}')
 

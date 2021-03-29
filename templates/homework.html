@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Домашнее задание на {{ homework_start }}/{{ homework_end }}</h1>
+    <h1>Домашнее задание на {{ homework_start }}-{{ homework_end }}</h1>
     <div class="homework">
         {% for day in days %}
             <div class="homework day">
@@ -11,7 +11,7 @@
                     <tr>
                         <th scope="col">Номер предмета</th>
                         <th scope="col">Название предмета</th>
-                        <th scope="col">Домашнее задание</th>
+                        <th scope="col">ДЗ</th>
                     </tr>
                     </thead>
 
