@@ -9,7 +9,7 @@ from data.schedules import Schedule
 from data.subjects import Subject
 from data.homework import Homework
 
-from forms import user_forms, schedule_forms
+from forms import user_forms, schedule_forms, homework_forms
 
 from constants import MAX_SUBJECTS
 
@@ -70,13 +70,21 @@ def logout():
     return redirect('/schedule')
 
 
-def get_schedule():
+def get_schedule(day=None):
     db_sess = db_session.create_session()
     query = db_sess.query(Schedule, Day, Subject)
     query = query.join(Day, Day.day_id == Schedule.schedule_day)
     query = query.join(Subject, Subject.subject_id == Schedule.schedule_subject)
+    if day is not None:
+        query = query.filter(Schedule.schedule_day == day)
 
     return query.all()
+
+
+def get_subjects():
+    db_sess = db_session.create_session()
+    query = db_sess.query(Subject).order_by(Subject.subject_name)
+    return [i.subject_name for i in query.all()]
 
 
 @app.route('/schedule')
@@ -104,7 +112,8 @@ def edit_subjects(day_num):
     if not day_name:
         abort(404)
     day_name = day_name.day_name
-    subj = [i.subject_name for i in db_sess.query(Subject).order_by(Subject.subject_name).all()]
+    subj = get_subjects()
+
     for subj_num in range(1, MAX_SUBJECTS + 1):
         exec(f'form.subject_{subj_num}.choices = {subj}')
 
@@ -146,11 +155,6 @@ def edit_subjects(day_num):
                            day_name=day_name, form=form, subjects=subj)
 
 
-# @app.route('/homework')
-# def choose_homework():
-#     pass
-
-
 @app.route('/homework/<int:year>/<int:week>')
 def show_homework(year, week):
     # TODO add homework_start/end
@@ -178,7 +182,62 @@ def show_homework(year, week):
         homework[i.Day.day_id] = now
     days = db_sess.query(Day).all()
 
-    return render_template('homework.html', title='Homework', days=days, homework=homework, max_subjects=MAX_SUBJECTS)
+    return render_template('homework.html', title='Homework', days=days,
+                           homework=homework, max_subjects=MAX_SUBJECTS,
+                           year=year, week=week)
+
+
+@app.route('/homework/<int:year>/<int:week>/<int:day_num>', methods=['GET', 'POST'])
+@login_required
+def edit_homework(year, week, day_num):
+    form = homework_forms.EditHomework()
+    db_sess = db_session.create_session()
+    day_name = db_sess.query(Day).filter(Day.day_id == day_num).first()
+    if not day_name:
+        abort(404)
+    day_name = day_name.day_name
+
+    schedule = get_schedule(day_num)
+
+    if request.method == "GET":
+        query = db_sess.query(Homework, Schedule, Subject)
+        query = query.join(Schedule, Schedule.schedule_id == Homework.homework_schedule)
+        query = query.join(Subject, Subject.subject_id == Schedule.schedule_subject)
+        query = query.filter(Schedule.schedule_day == day_num)
+        query = query.filter(Homework.homework_week == week)
+        query = query.filter(Homework.homework_year == year)
+
+        homework = query.all()
+        for i in schedule:
+            exec(f'form.subject_{i.Schedule.schedule_num}.label.text = "{i.Subject.subject_name}"')
+        for i in homework:
+            exec(f'form.subject_{i.Schedule.schedule_num}.default = "{i.Homework.homework_text}"')
+        form.process()
+        return render_template('homework_edit.html', title='Edit homework',
+                               day_name=day_name, form=form)
+    if form.validate_on_submit():
+        if form.cancel.data:
+            return redirect('/homework')
+        for subj_num in range(1, MAX_SUBJECTS + 1):
+            query = db_sess.query(Homework, Schedule)
+            query = query.join(Schedule, Schedule.schedule_id == Homework.homework_schedule)
+            query = query.filter(Schedule.schedule_day == day_num,
+                                 Schedule.schedule_num == subj_num)
+            query = query.filter(Homework.homework_week == week,
+                                 Homework.homework_year == year)
+
+            hmw = query.first()
+
+            form_hmw = eval(f'form.subject_{subj_num}.data')
+
+            if hmw and form_hmw:
+                hmw.Homework.homework_text = form_hmw
+            elif hmw and not form_hmw:
+                hmw.Homework.homework_text = ''
+            elif hmw is None and form_hmw:
+                hmw.Homework.homework_text = form_hmw
+        db_sess.commit()
+        return redirect(f'/homework/{year}/{week}')
 
 
 if __name__ == 'app':

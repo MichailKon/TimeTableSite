@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Изменить дз на {{ day_name }}</h2>
+    <form action="" method="post">
+        <div>
+            {{ form.csrf_token }}
+        </div>
+
+        {% for field in form if field.name not in ["csrf_token", "submit", "cancel"] %}
+            <div class="form-group">
+                {{ field.label }}<br>
+                {{ field(class="form-control") }}
+                {% for error in field.errors %}
+                    <div class="error">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <br>
+        <div class="schedule-buttons">
+            <p>{{ form.cancel(type="submit", class="btn btn-secondary") }}</p>
+            <p>{{ form.submit(type="submit", class="btn btn-success") }}</p>
+        </div>
+    </form>
+
+{% endblock %}

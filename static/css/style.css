@@ -35,3 +35,7 @@ thead {
 tbody > tr > td {
     text-align: center;
 }
+
+.day > table > thead > tr > th {
+    background-color: gray;
+}
