@@ -162,9 +162,14 @@ def edit_subjects(day_num):
                            day_name=day_name, form=form, subjects=subj)
 
 
+@app.route('/homework')
+def redirect_from_pure_homework():
+    year, week_num, day_of_week = datetime.date.today().isocalendar()
+    return redirect(f'/homework/{year}/{week_num}')
+
+
 @app.route('/homework/<int:year>/<int:week>')
 def show_homework(year, week):
-    # TODO add homework_start/end
     db_sess = db_session.create_session()
     homework = {}
     # pick schedule
@@ -193,7 +198,7 @@ def show_homework(year, week):
 
     return render_template('homework.html', title='Homework', days=days,
                            homework=homework, max_subjects=MAX_SUBJECTS,
-                           year=year, week=week,
+                           year=str(year), week=str(week),
                            homework_start=first, homework_end=last)
 
 

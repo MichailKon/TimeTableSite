@@ -8,10 +8,14 @@ h4 {
 
 .schedule {
     display: flex;
+    grid-auto-rows: 1fr;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
+    justify-items: center;
+    list-style: none;
+    padding: 0;
 }
 
 .day {
@@ -39,3 +43,9 @@ tbody > tr > td {
 .day > table > thead > tr > th {
     background-color: gray;
 }
+
+.col-container {
+    display: flex;
+    width: 100%;
+}
+

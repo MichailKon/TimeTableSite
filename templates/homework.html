@@ -1,26 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <form action="/schedule">
+        <input type="submit" value="В расписание" class="btn btn-primary">
+    </form>
     <h1>Домашнее задание на {{ homework_start }}-{{ homework_end }}</h1>
-    <div class="homework">
+    <input type="week" id="select-week" value={{ year + "-W" + week }}>
+    <script>
+        document.getElementById("select-week").onchange = function () {
+            const year = document.getElementById("select-week").value.substring(0, 4);
+            const week = document.getElementById("select-week").value.substring(6, 8)
+            window.location.href = "/homework/" + year + "/" + week
+        }
+    </script>
+    <div class="schedule homework">
         {% for day in days %}
-            <div class="homework day">
+            <div class="day">
                 <h2>{{ day.day_name }}</h2>
                 <table class="table table-bordered table-striped table-homework">
                     <thead>
-                    <tr>
-                        <th scope="col">Номер предмета</th>
-                        <th scope="col">Название предмета</th>
-                        <th scope="col">ДЗ</th>
+                    <tr class="col-container">
+                        <th scope="col" class="col">Номер предмета</th>
+                        <th scope="col" class="col">Название предмета</th>
+                        <th scope="col" class="col">ДЗ</th>
                     </tr>
                     </thead>
 
                     <tbody>
                     {% for subject in range(1, max_subjects + 1) %}
-                        <tr class="table-secondary">
-                            <th scope="col">{{ loop.index }}</th>
-                            <td>{{ homework.get(day.day_id, {}).get(subject, {}).get('subject_title', '') }}</td>
-                            <td>{{ homework.get(day.day_id, {}).get(subject, {}).get('subject_homework', '') }}</td>
+                        <tr class="table-secondary col-container">
+                            <th scope="col" class="col">{{ loop.index }}</th>
+                            <td class="col">{{ homework.get(day.day_id, {}).get(subject, {}).get('subject_title', '') }}</td>
+                            <td class="col">{{ homework.get(day.day_id, {}).get(subject, {}).get('subject_homework', '') }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

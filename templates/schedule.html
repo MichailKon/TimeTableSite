@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <form action="/homework">
+        <input type="submit" value="В дз" class="btn btn-primary">
+    </form>
     <h1>Расписание</h1>
     <div class="schedule">
         {% for day in days %}
-            <div class="schedule day">
+            <div class="day">
                 <h2>{{ day.day_name }}</h2>
                 <table class="table table-bordered table-striped table-active table-schedule">
                     <thead>
