@@ -13,6 +13,8 @@ from data.subjects import Subject
 from data.users import User
 from forms import user_forms, schedule_forms, homework_forms
 
+from api.v1 import schedule_api, subjects_api, homework_api
+
 app = Flask(__name__)
 api = Api(app)
 login_manager = LoginManager()
@@ -255,12 +257,14 @@ def edit_homework(year, week, day_num):
                 new_hmw = Homework(homework_text=form_hmw, homework_schedule=schedule.Schedule.schedule_id,
                                    homework_year=year, homework_week=week)
                 db_sess.add(new_hmw)
-                # hmw.Homework.homework_text = form_hmw
         db_sess.commit()
         return redirect(f'/homework/{year}/{week}')
 
 
 if __name__ == 'app':
+    app.register_blueprint(schedule_api.blueprint)
+    app.register_blueprint(subjects_api.blueprint)
+    app.register_blueprint(homework_api.blueprint)
     app.jinja_env.add_extension('jinja2.ext.do')
     login_manager.init_app(app)
     db_session.global_init("db/homework.db")
