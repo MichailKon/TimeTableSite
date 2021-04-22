@@ -23,6 +23,7 @@
                         <th scope="col" class="col">Номер предмета</th>
                         <th scope="col" class="col">Название предмета</th>
                         <th scope="col" class="col">ДЗ</th>
+                        <th scope="col" class="col">Доп. файл</th>
                     </tr>
                     </thead>
 
@@ -32,6 +33,12 @@
                             <th scope="col" class="col">{{ loop.index }}</th>
                             <td class="col">{{ homework.get(day.day_id, {}).get(subject, {}).get('subject_title', '') }}</td>
                             <td class="col">{{ homework.get(day.day_id, {}).get(subject, {}).get('subject_homework', '') }}</td>
+                            <td class="col">
+                                {% set filename = homework.get(day.day_id, {}).get(subject, {}).get('subject_file', '') %}
+                                {% if filename %}
+                                    <a href="/additional/{{ filename }}">Файл</a>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>

@@ -1,10 +1,10 @@
 p {
-   font-family: 'Roboto', 'Helvetica Nue', sans-serif;
+    font-family: 'Roboto', 'Helvetica Nue', sans-serif;
 }
 
-h4 {
-    color: lightgray;
-}
+/*h4 {*/
+/*    color: lightgray;*/
+/*}*/
 
 .schedule {
     display: flex;
@@ -44,8 +44,6 @@ tbody > tr > td {
     background-color: gray;
 }
 
-.col-container {
-    display: flex;
-    width: 100%;
+.subject-homework-text {
+    margin: 0 0 15px 0;
 }
-

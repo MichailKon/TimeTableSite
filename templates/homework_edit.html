@@ -2,19 +2,23 @@
 
 {% block content %}
     <h2>Изменить дз на {{ day_name }}</h2>
-    <form action="" method="post">
+    <form action="" method="post" enctype="multipart/form-data">
         <div>
             {{ form.csrf_token }}
         </div>
 
         {% for field in form if field.name not in ["csrf_token", "submit", "cancel"] %}
             <div class="form-group">
-                {{ field.label }}<br>
-                {{ field(class="form-control") }}
-                {% for error in field.errors %}
-                    <div class="error">{{ error }}</div>
-                {% endfor %}
+                {% if field.name.endswith("_file") %}
+                    {{ field(class="form-control file", **{'data-show-preview': 'false'}) }}
+                {% else %}
+                    <h4 class="subject-title">{{ field.label }}</h4>
+                    <div class="subject-homework-text">{{ field(class="form-control") }}</div>
+                {% endif %}
             </div>
+            {% for error in field.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
         {% endfor %}
 
         <br>

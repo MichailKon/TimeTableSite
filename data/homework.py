@@ -11,3 +11,4 @@ class Homework(SqlAlchemyBase, SerializerMixin):
     homework_week = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     homework_year = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     homework_text = sqlalchemy.Column(sqlalchemy.Text)
+    homework_file = sqlalchemy.Column(sqlalchemy.String)

@@ -1,7 +1,9 @@
 import datetime
+import os
 
-from flask import Flask, render_template, redirect, request, abort
+from flask import Flask, render_template, redirect, request, abort, send_from_directory
 from flask_login import LoginManager, login_user, login_required, logout_user
+from werkzeug.utils import secure_filename
 from flask_restful import Api, abort
 
 from constants import MAX_SUBJECTS
@@ -15,10 +17,14 @@ from forms import user_forms, schedule_forms, homework_forms
 
 from api.v1 import schedule_api, subjects_api, homework_api
 
+from constants import ALLOWED_EXTENSIONS, UPLOAD_FOLDER
+import uuid
+
 app = Flask(__name__)
 api = Api(app)
 login_manager = LoginManager()
 app.config['SECRET_KEY'] = '267iokdonibf890wi4k23ioruh8fuipokaldfsa'
+app.config['UPLOAD_FOLDER'] = 'dynamic'
 
 
 def get_start_and_end_date_from_calendar_week(year, calendar_week):
@@ -32,9 +38,14 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+
 @app.route('/')
-def hello_world():
-    return render_template('base.html', title='Hi')
+def start_page():
+    return redirect("/schedule")
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -193,6 +204,7 @@ def show_homework(year, week):
         now[i.Schedule.schedule_num] = now.get(i.Schedule.schedule_num, {})
         now[i.Schedule.schedule_num]['subject_title'] = i.Subject.subject_name
         now[i.Schedule.schedule_num]['subject_homework'] = i.Homework.homework_text
+        now[i.Schedule.schedule_num]['subject_file'] = i.Homework.homework_file
         homework[i.Day.day_id] = now
     days = db_sess.query(Day).all()
 
@@ -248,17 +260,35 @@ def edit_homework(year, week, day_num):
             hmw = query.first()
 
             form_hmw = eval(f'form.subject_{subj_num}.data')
+            form_hmw_file = eval(f'form.subject_{subj_num}_file.data')
+            if form_hmw_file:
+                trash, ext = os.path.splitext(form_hmw_file.filename)
+                filename = f'{str(uuid.uuid4())}{ext}'
+                filename = os.path.join(UPLOAD_FOLDER, filename)
+                form_hmw_file.save(filename)
+                form_hmw_file = filename
+            else:
+                form_hmw_file = None
 
-            if hmw and form_hmw:
+            if hmw and (form_hmw or form_hmw_file):
                 hmw.Homework.homework_text = form_hmw
+                if form_hmw_file:
+                    hmw.Homework.homework_file = form_hmw_file
             elif hmw and not form_hmw:
                 hmw.Homework.homework_text = ''
-            elif hmw is None and form_hmw:
+                if form_hmw_file:
+                    hmw.Homework.homework_file = form_hmw_file
+            elif hmw is None and (form_hmw or form_hmw_file):
                 new_hmw = Homework(homework_text=form_hmw, homework_schedule=schedule.Schedule.schedule_id,
-                                   homework_year=year, homework_week=week)
+                                   homework_year=year, homework_week=week, homework_file=form_hmw_file)
                 db_sess.add(new_hmw)
         db_sess.commit()
         return redirect(f'/homework/{year}/{week}')
+
+
+@app.route('/additional/dynamic/<string:filename>')
+def show_file(filename):
+    return send_from_directory(directory=app.config['UPLOAD_FOLDER'], filename=filename)
 
 
 if __name__ == 'app':
