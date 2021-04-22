@@ -298,4 +298,6 @@ if __name__ == 'app':
     app.jinja_env.add_extension('jinja2.ext.do')
     login_manager.init_app(app)
     db_session.global_init("db/homework.db")
-    app.run()
+
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
